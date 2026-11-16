@@ -14,7 +14,8 @@ const songs = (params.get('songs') || params.get('song') || 'tsubaki').split(','
 const threads = Number(params.get('threads') || 4);
 const pageFilter = params.get('pages');  // e.g. "1-3" or "2,5"
 const tag = params.get('tag') || 'web300';
-const samples = new URL('../../../../samples/', location.href);
+// ?base=<folder with <song>/<song>.pdf>, relative to this page (default: the repo's samples/).
+const samples = new URL(params.get('base') || '../../../../samples/', location.href);
 
 const state = { status: 'starting', done: 0, total: 0, errors: [], log: [] };
 window.parity = state;

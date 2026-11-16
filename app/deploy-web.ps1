@@ -50,15 +50,20 @@ try {
 } finally { Pop-Location }
 
 if ($NoPush) { Write-Host "コピーしました: $Repo"; return }
+# git prints warnings (line endings) on stderr; judge by exit codes instead.
+$ErrorActionPreference = 'Continue'
 Push-Location $Repo
 try {
-    git add -A
+    git add -A 2>$null
+    if ($LASTEXITCODE -ne 0) { throw 'git add に失敗しました。' }
     git diff --cached --quiet
     if ($LASTEXITCODE -eq 0) { Write-Host '変更はありません。'; return }
     $msgFile = New-TemporaryFile
     [IO.File]::WriteAllText($msgFile, "$Message`n`nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`n", [Text.UTF8Encoding]::new($false))
-    git commit -q -F $msgFile
+    git commit -q -F $msgFile 2>$null
+    if ($LASTEXITCODE -ne 0) { throw 'git commit に失敗しました。' }
     Remove-Item $msgFile
-    git push -q
+    git push -q 2>$null
+    if ($LASTEXITCODE -ne 0) { throw 'git push に失敗しました。' }
     Write-Host 'https://takeruhitomi.github.io/ototori-web/ に公開しました（反映まで1〜2分）。'
 } finally { Pop-Location }
