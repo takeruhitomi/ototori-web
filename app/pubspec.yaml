@@ -1,0 +1,20 @@
+name: choir_mobile
+description: 音鳥 — choir part-learning app that turns score PDFs into practice audio on device.
+publish_to: none
+version: 0.2.5+17
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  # Web build only (lib/web_bridge.dart); part of the Flutter SDK.
+  flutter_web_plugins:
+    sdk: flutter
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icon/png/play_store_512.png

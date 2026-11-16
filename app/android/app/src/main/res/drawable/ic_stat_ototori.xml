@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status-bar icon for notifications: the 音鳥 silhouette from
+     ic_launcher_monochrome, cropped to the bird so it reads at 24dp. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="44"
+    android:viewportHeight="44">
+    <group
+        android:translateX="-27.5"
+        android:translateY="-30.5">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M38.5,60.6 L30,64.2 L39.4,67.4 Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M56,67 L66,71 L64.5,67.5 L69,67 L58,62.5 Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M56,31 H58.8 V61 H56 Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M58.4,31 L58.8,31 C65.6,33 70.6,39 68.6,48 C67.6,45 65.6,44 64.1,44 C65.6,47 65.1,50 63.6,52 C62.6,46 60.6,43 58.8,42 L58.4,42 Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:fillType="evenOdd"
+            android:pathData="M35.754,68.275 A12.5,9 -20 1,1 59.246,59.725 A12.5,9 -20 1,1 35.754,68.275 Z M40.6,61 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 Z" />
+    </group>
+</vector>

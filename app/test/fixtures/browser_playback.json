@@ -1,0 +1,322 @@
+{
+  "repeat_ties": {
+    "score": {
+      "tempo_bpm": 120,
+      "meta": {
+        "repeat_override": [
+          {
+            "start": 1,
+            "end": 2,
+            "times": 2,
+            "endings": []
+          }
+        ]
+      },
+      "playback_order": [
+        0,
+        1,
+        0,
+        1
+      ],
+      "staves": [
+        {
+          "id": "v",
+          "role": "voice",
+          "measures": [
+            {
+              "time_sig": [
+                4,
+                4
+              ],
+              "events": [
+                {
+                  "onset": "0/1",
+                  "duration": "4/1",
+                  "pitches": [
+                    60
+                  ],
+                  "voice": 0,
+                  "tie_start": true
+                }
+              ]
+            },
+            {
+              "time_sig": [
+                4,
+                4
+              ],
+              "events": [
+                {
+                  "onset": "0/1",
+                  "duration": "2/1",
+                  "pitches": [
+                    60
+                  ],
+                  "voice": 0,
+                  "tie_stop": true
+                },
+                {
+                  "onset": "2/1",
+                  "duration": "2/1",
+                  "pitches": [
+                    62
+                  ],
+                  "voice": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "notes": [
+      {
+        "staffId": "v",
+        "start": 0,
+        "duration": 6,
+        "pitch": 60,
+        "grace": false,
+        "voice": 0,
+        "measure": 0,
+        "legato": false
+      },
+      {
+        "staffId": "v",
+        "start": 6,
+        "duration": 2,
+        "pitch": 62,
+        "grace": false,
+        "voice": 0,
+        "measure": 1,
+        "legato": false
+      },
+      {
+        "staffId": "v",
+        "start": 8,
+        "duration": 6,
+        "pitch": 60,
+        "grace": false,
+        "voice": 0,
+        "measure": 2,
+        "legato": false
+      },
+      {
+        "staffId": "v",
+        "start": 14,
+        "duration": 2,
+        "pitch": 62,
+        "grace": false,
+        "voice": 0,
+        "measure": 3,
+        "legato": false
+      }
+    ]
+  },
+  "grace_and_slur": {
+    "score": {
+      "tempo_bpm": 80,
+      "meta": {},
+      "staves": [
+        {
+          "id": "v",
+          "role": "voice",
+          "measures": [
+            {
+              "time_sig": [
+                4,
+                4
+              ],
+              "events": [
+                {
+                  "onset": "0/1",
+                  "duration": "1/1",
+                  "pitches": [
+                    60
+                  ],
+                  "voice": 0,
+                  "slur_starts": [
+                    "s"
+                  ]
+                },
+                {
+                  "onset": "1/1",
+                  "duration": "1/2",
+                  "pitches": [
+                    62
+                  ],
+                  "voice": 0,
+                  "grace": true
+                },
+                {
+                  "onset": "1/1",
+                  "duration": "2/1",
+                  "pitches": [
+                    64
+                  ],
+                  "voice": 0,
+                  "slur_stops": [
+                    "s"
+                  ]
+                },
+                {
+                  "onset": "3/1",
+                  "duration": "1/1",
+                  "pitches": [],
+                  "voice": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "notes": [
+      {
+        "staffId": "v",
+        "start": 0,
+        "duration": 0.9375,
+        "pitch": 60,
+        "grace": false,
+        "voice": 0,
+        "measure": 0,
+        "legato": true
+      },
+      {
+        "staffId": "v",
+        "start": 0.9375,
+        "duration": 0.0625,
+        "pitch": 62,
+        "grace": true,
+        "voice": 0,
+        "measure": 0,
+        "legato": true
+      },
+      {
+        "staffId": "v",
+        "start": 1,
+        "duration": 2,
+        "pitch": 64,
+        "grace": false,
+        "voice": 0,
+        "measure": 0,
+        "legato": false
+      }
+    ]
+  },
+  "piano_cross_staff_graces": {
+    "score": {
+      "tempo_bpm": 100,
+      "meta": {},
+      "staves": [
+        {
+          "id": "rh",
+          "role": "piano_rh",
+          "measures": [
+            {
+              "time_sig": [
+                4,
+                4
+              ],
+              "events": [
+                {
+                  "onset": "0/1",
+                  "duration": "1/4",
+                  "pitches": [
+                    72
+                  ],
+                  "voice": 0,
+                  "grace": true,
+                  "grace_index": 0,
+                  "grace_count": 2
+                },
+                {
+                  "onset": "0/1",
+                  "duration": "2/1",
+                  "pitches": [
+                    76
+                  ],
+                  "voice": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lh",
+          "role": "piano_lh",
+          "measures": [
+            {
+              "time_sig": [
+                4,
+                4
+              ],
+              "events": [
+                {
+                  "onset": "0/1",
+                  "duration": "1/4",
+                  "pitches": [
+                    48
+                  ],
+                  "voice": 0,
+                  "grace": true,
+                  "grace_index": 1,
+                  "grace_count": 2
+                },
+                {
+                  "onset": "0/1",
+                  "duration": "1/2",
+                  "pitches": [
+                    52
+                  ],
+                  "voice": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "notes": [
+      {
+        "staffId": "rh",
+        "start": 0,
+        "duration": 0.0625,
+        "pitch": 72,
+        "grace": true,
+        "voice": 0,
+        "measure": 0,
+        "legato": true
+      },
+      {
+        "staffId": "rh",
+        "start": 0.125,
+        "duration": 1.875,
+        "pitch": 76,
+        "grace": false,
+        "voice": 0,
+        "measure": 0,
+        "legato": false
+      },
+      {
+        "staffId": "lh",
+        "start": 0.0625,
+        "duration": 0.0625,
+        "pitch": 48,
+        "grace": true,
+        "voice": 0,
+        "measure": 0,
+        "legato": true
+      },
+      {
+        "staffId": "lh",
+        "start": 0.125,
+        "duration": 0.375,
+        "pitch": 52,
+        "grace": false,
+        "voice": 0,
+        "measure": 0,
+        "legato": false
+      }
+    ]
+  }
+}

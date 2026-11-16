@@ -1,29 +1,28 @@
-# 音鳥 Web（試験版）
+# 音鳥（ototori）Web 版
 
-合唱の楽譜PDFを読み取る「音鳥」のブラウザ版です。いまは試験版で、PDFの1ページを端末のブラウザだけで読み取り、速度と結果を確かめられます。再生や楽譜の組み立てはまだできません。
+合唱の楽譜PDFを読み取り、パートごとに聴ける音取り音源を作るアプリ「音鳥」のブラウザ版です。画面は Android 版と同じ Flutter のコードで、iPhone の Safari でも動きます。
 
-公開ページ: https://takeruhitomi.github.io/ototori-web/
+**https://takeruhitomi.github.io/ototori-web/**
 
-## しくみ
+- PDFの読み取り（全ページ、パート構成の自動判定、途中から加わるパート、タイ・テンポなど）は、すべて端末のブラウザの中で行います。PDFはどこにも送信しません。
+- 読み取りモデル（約150 MB）は、最初に変換するときに一度だけダウンロードし、端末に保存します。
+- 練習（パート別の再生、ミキサー、ループ、テンポ）、小節の修正、ライブラリ、MIDI・MusicXMLの書き出し、曲ファイル（`.ototori`）の共有・取り込みができます。Android 版と曲ファイル・バックアップをやり取りできます。
 
-- PDFは [pdf.js](https://mozilla.github.io/pdf.js/) で 300 dpi（幅は最大 3840 px）に描画し、幅 1920 px のグレースケールにします。
-- 認識は [homr](https://github.com/liebharc/homr) 0.7 のモデル（五線・記号の位置を求める segnet、五線を記号列に変える encoder / decoder）を [ONNX Runtime Web](https://onnxruntime.ai/) で動かします。前処理・五線の検出・切り出しは、Android 版の音鳥（Kotlin）をそのまま JavaScript に移したものです。
-- PDF もモデルも端末の外には送りません。モデル（約150 MB）は初回だけダウンロードし、ブラウザのキャッシュに保存します。
-- GitHub Pages は複数スレッドに必要なヘッダーを送れないため、`coi-sw.js`（Service Worker）で付けています。付けられない環境では1スレッドで動きます。
+## Android 版との違い
 
-## ローカルで動かす
+- 変換中は画面を開いたままにしてください。Android のように裏で変換を続けられません。途中で止まった場合は、読み取り済みのページから再開できます。
+- パート名とテンポの文字は、PDFに文字情報があるときだけ読み取ります（Android は文字認識を使います）。スキャンしたPDFでは、パート名は配置から推定し、テンポは ♩=80 から始まります。
+- 1ページの読み取りにかかる時間は、iPhone 16 Pro で約30秒です。
 
-```
-python -m http.server 8000
-```
+## 構成
 
-`http://localhost:8000/` を開きます。この方法では複数スレッドになりません。
+- `docs/`：公開しているサイト（`flutter build web` の出力と認識モデル）。GitHub Pages はここを配信します。
+- `app/`：アプリのソース（Flutter）。ブラウザ用の処理は `app/web/js/` にあり、Android 版の Kotlin（`app/android/`）を移植したものです。Dart 側は `app/lib/web_bridge.dart` で、Android と同じ呼び出しをブラウザの処理へ渡します。
 
 ## ライセンス
 
-このリポジトリは AGPL-3.0 です（`LICENSE`）。
+AGPL-3.0（`LICENSE`）。
 
-- `models/*.onnx` と `models/vocabulary.json`：homr 0.7 のモデルと語彙。© Christian Liebhardt ほか、AGPL-3.0。https://github.com/liebharc/homr
-- `js/omr-*.js`：homr の手順（分割・デコード）を Android 版から移植したもので、AGPL-3.0。
-- `vendor/onnxruntime-web/`：ONNX Runtime Web 1.22.0、MIT License（© Microsoft Corporation）。
-- `vendor/pdfjs/`：pdf.js 4.10.38、Apache License 2.0（© Mozilla Foundation）。
+- 楽譜認識は [homr](https://github.com/liebharc/homr) 0.7（© Christian Liebhardt ほか、AGPL-3.0）のモデルと手順を使っています。
+- ONNX Runtime Web（MIT）、pdf.js（Apache-2.0）、fflate（MIT）を同梱しています。
+- ピアノ音源は Salamander Grand Piano（Alexander Holm、CC BY 3.0）の一部を変換したものです。

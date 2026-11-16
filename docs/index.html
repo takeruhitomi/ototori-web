@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <base href="/ototori-web/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="音鳥（ototori）: 合唱の楽譜PDFを読み取り、パート練習の音源にするアプリのブラウザ版">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="音鳥">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <title>音鳥</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    html, body { margin: 0; height: 100%; background: #F4F5FA; }
+    @media (prefers-color-scheme: dark) { html, body { background: #0D1230; } }
+    #ototori-boot { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      font: 15px -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; color: #6b6f86; }
+  </style>
+  <script>
+    // Multi-threaded recognition needs cross-origin isolation. GitHub Pages
+    // cannot send the headers, so coi-sw.js adds them (one reload).
+    if (!self.crossOriginIsolated && 'serviceWorker' in navigator && !sessionStorage.getItem('coi-reloaded')) {
+      navigator.serviceWorker.register('coi-sw.js').then(() => navigator.serviceWorker.ready).then(() => {
+        sessionStorage.setItem('coi-reloaded', '1');
+        location.reload();
+      }).catch(() => {});
+    }
+  </script>
+  <!-- Answers the app's platform channels (see lib/web_bridge.dart). -->
+  <script type="module" src="js/platform.js"></script>
+</head>
+<body>
+  <div id="ototori-boot">音鳥を読み込んでいます…</div>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

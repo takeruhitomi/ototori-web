@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Adaptive icon foreground (音鳥). Source artwork: assets/icon/ototori_icon.svg -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:translateX="5"
+        android:translateY="2">
+        <path
+            android:fillColor="#E39A1C"
+            android:pathData="M38.5,60.6 L30,64.2 L39.4,67.4 Z" />
+        <path
+            android:fillColor="#F2C12E"
+            android:pathData="M56,67 L66,71 L64.5,67.5 L69,67 L58,62.5 Z" />
+        <path
+            android:fillColor="#F2C12E"
+            android:pathData="M35.754,68.275 A12.5,9 -20 1,1 59.246,59.725 A12.5,9 -20 1,1 35.754,68.275 Z" />
+        <path
+            android:fillColor="#F2C12E"
+            android:pathData="M56,31 H58.8 V61 H56 Z" />
+        <path
+            android:fillColor="#F2C12E"
+            android:pathData="M58.4,31 L58.8,31 C65.6,33 70.6,39 68.6,48 C67.6,45 65.6,44 64.1,44 C65.6,47 65.1,50 63.6,52 C62.6,46 60.6,43 58.8,42 L58.4,42 Z" />
+        <path
+            android:fillColor="#1E2A6E"
+            android:pathData="M40.6,61 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 Z" />
+        <path
+            android:pathData="M46,67.8 q5.5,2.6 10,-2.6"
+            android:strokeColor="#1E2A6E"
+            android:strokeLineCap="round"
+            android:strokeWidth="1.6" />
+    </group>
+</vector>
