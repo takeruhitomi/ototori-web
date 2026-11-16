@@ -1,0 +1,4 @@
+vendor/** -text
+models/** -text
+*.onnx binary
+*.wasm binary
