@@ -188,7 +188,7 @@ function finish(page) {
   };
   $('summary').innerHTML = Object.entries(items).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
   Object.assign(lastResult, { totalMs: Math.round(total), timing: t, staves: page.staves, height: page.height, ua: navigator.userAgent });
-  window.__otoriResult = lastResult;
+  window.__ototoriResult = lastResult;
 }
 
 $('copy').addEventListener('click', async () => {

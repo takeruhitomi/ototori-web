@@ -11,7 +11,7 @@ import { clahe, resizeLinear, pageX, prepareStaff } from './omr-image.js';
 const ORT_VERSION = '1.22.0';
 const ORT_BASE = new URL('../vendor/onnxruntime-web/', import.meta.url).href;
 
-const MODEL_CACHE = 'otori-models-homr-0.7';
+const MODEL_CACHE = 'ototori-models-homr-0.7';
 const MODELS = ['segnet.onnx', 'encoder.onnx', 'decoder.onnx'];
 const WINDOW = 320;
 let sessions = null;

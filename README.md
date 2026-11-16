@@ -2,7 +2,7 @@
 
 合唱の楽譜PDFを読み取る「音鳥」のブラウザ版です。いまは試験版で、PDFの1ページを端末のブラウザだけで読み取り、速度と結果を確かめられます。再生や楽譜の組み立てはまだできません。
 
-公開ページ: https://takeruhitomi.github.io/otori-web/
+公開ページ: https://takeruhitomi.github.io/ototori-web/
 
 ## しくみ
 
