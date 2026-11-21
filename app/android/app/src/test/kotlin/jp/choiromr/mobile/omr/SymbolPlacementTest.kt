@@ -68,6 +68,37 @@ class SymbolPlacementTest {
         assertNotNull(places[0]!!.lines)
     }
 
+    @Test fun repeatedNotesTakeTheirOwnHeads() {
+        // Two G4 heads at 300 and 340; the decoder's x for both lies between them.
+        // The second used to snap to the first head (two notes on one head).
+        val m = ByteArray(width * height)
+        staff(m, 100.0)
+        head(m, 300.0, 100.0 + 3 * sp)
+        head(m, 340.0, 100.0 + 3 * sp)
+        val lines = (0..4).map { 100.0 + it * sp }
+        val places = SymbolPlacement.place(m, width, height, lines, 50, 850, listOf(
+            PlacedToken("clef_G2", ".", 60.0), PlacedToken("note_4", "G4", 312.0), PlacedToken("note_4", "G4", 322.0)))
+        assertTrue(places[1]!!.snapped && places[2]!!.snapped)
+        assertEquals(300.0, places[1]!!.x, 2.0)
+        assertEquals(340.0, places[2]!!.x, 2.0)
+    }
+
+    @Test fun aChordsHeadsShareTheirStart() {
+        // G4 and B4 of one chord at 300 ("chord" token between them), then G4 at 340.
+        val m = ByteArray(width * height)
+        staff(m, 100.0)
+        head(m, 300.0, 100.0 + 3 * sp)
+        head(m, 300.0, 100.0 + 2 * sp)
+        head(m, 340.0, 100.0 + 3 * sp)
+        val lines = (0..4).map { 100.0 + it * sp }
+        val places = SymbolPlacement.place(m, width, height, lines, 50, 850, listOf(
+            PlacedToken("clef_G2", ".", 60.0), PlacedToken("note_4", "G4", 305.0), PlacedToken("chord", ".", null),
+            PlacedToken("note_4", "B4", 305.0), PlacedToken("note_4", "G4", 318.0)))
+        assertEquals(300.0, places[1]!!.x, 2.0)
+        assertEquals(300.0, places[3]!!.x, 2.0)
+        assertEquals(340.0, places[4]!!.x, 2.0)
+    }
+
     @Test fun noteWithoutAHeadAtItsPitchIsNotSnapped() {
         val m = ByteArray(width * height)
         staff(m, 100.0)

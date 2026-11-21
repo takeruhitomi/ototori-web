@@ -61,9 +61,21 @@ export function place(mask, width, height, lines, left, right, tokens) {
   let bottomLine = diatonic('E4');
   let startGiven = false;
   // Token order says which bar a note is in: search between its barlines.
+  // It also says which chord comes first: a chord's heads lie right of the
+  // previous chord's, so the search starts after the leftmost head the
+  // previous chord snapped to (a repeated note cannot take its neighbour's head).
+  let previous = null;  // leftmost snapped head of the last chord in this bar
+  let chordMin = null;  // the same for the chord being placed
   tokens.forEach((t, i) => {
     let before = left, after = right;
     for (const b of bars) { if (b < i) before = out[b].x; else if (b > i) { after = out[b].x; break; } }
+    const timed = t.rhythm.startsWith('note_') || t.rhythm.startsWith('rest_');
+    if (BARLINES.has(t.rhythm)) { previous = null; chordMin = null; }
+    else if (timed && !(i > 0 && tokens[i - 1].rhythm === 'chord')) {
+      // A new chord (its members follow a "chord" token).
+      if (chordMin != null) previous = chordMin;
+      chordMin = null;
+    }
     if (t.rhythm.startsWith('clef_')) {
       const bottom = clefBottom(t.rhythm);
       if (bottom != null) bottomLine = bottom;
@@ -71,8 +83,11 @@ export function place(mask, width, height, lines, left, right, tokens) {
       if (!startGiven) { out[i] = tokenPlace(left, null, 1.0, true, model.at(start)); startGiven = true; }
     } else if (t.rhythm.startsWith('note_') && t.x != null) {
       const d = diatonic(t.pitch);
+      // snapNote keeps 0.4 space from `before`: heads at least 0.6 space apart.
+      const from = previous != null && previous > before ? Math.max(before, previous + 0.2 * model.sp) : before;
       out[i] = d == null ? tokenPlace(t.x, null, 0, false)
-        : snapNote(mask, width, height, model, t.x, d - bottomLine, hollow(t.rhythm), t.rhythm.includes('G'), before, after);
+        : snapNote(mask, width, height, model, t.x, d - bottomLine, hollow(t.rhythm), t.rhythm.includes('G'), from, after);
+      if (out[i].snapped && (chordMin == null || out[i].x < chordMin)) chordMin = out[i].x;
     } else if (t.rhythm.startsWith('rest_') && t.x != null) {
       out[i] = tokenPlace(t.x, null, 0, false);
     }
@@ -233,22 +248,33 @@ function snapNote(mask, width, height, model, attention, step, isHollow, grace, 
   if (hi > lo) { from = Math.max(from, Math.trunc(lo)); to = Math.min(to, Math.trunc(hi)); }
   from = Math.max(0, from); to = Math.min(width - 1, to);
   let bestX = x, bestY = y, peak = -1;
-  const profile = [];
+  const profile = [], ys = [];
   for (let cx = from; cx <= to; cx++) {
     let colBest = -1, colY = y;
     for (const dy of [0.0, -0.15 * sp, 0.15 * sp]) {
       const s = headScore(mask, width, height, cx, y + dy, sp * scale, isHollow);
       if (s > colBest) { colBest = s; colY = y + dy; }
     }
-    profile.push(colBest);
+    profile.push(colBest); ys.push(colY);
     if (colBest > peak) { peak = colBest; bestX = cx; bestY = colY; }
   }
   if (peak < 0) return tokenPlace(x, y, 0, false);
   const [low, high] = isHollow ? [0.3, 0.65] : [0.4, 0.85];
-  let conf = Math.min(Math.max((peak - low) / (high - low), 0), 1);
+  // Of the heads in reach that would count as found, the one nearest the
+  // decoder's x: with repeated notes the strongest is often the neighbour's.
+  const enough = low + 0.5 * (high - low);
+  let near = -1;
+  for (let k = 0; k < profile.length; k++) {
+    const s = profile[k];
+    if (s < enough || (k > 0 && profile[k - 1] > s) || (k + 1 < profile.length && profile[k + 1] >= s)) continue;
+    if (near < 0 || Math.abs(from + k - x) < Math.abs(from + near - x)) near = k;
+  }
+  const chosen = near >= 0 ? profile[near] : peak;
+  if (near >= 0) { bestX = from + near; bestY = ys[near]; }
+  let conf = Math.min(Math.max((chosen - low) / (high - low), 0), 1);
   // A beam or a long line at this height scores everywhere: not a head.
   const typical = [...profile].sort((a, b) => a - b)[profile.length >> 1];
-  if (typical > 0.7 * peak) conf *= 0.5;
+  if (typical > 0.7 * chosen) conf *= 0.5;
   return conf >= 0.5 ? tokenPlace(bestX, bestY, conf, true) : tokenPlace(x, y, conf, false);
 }
 

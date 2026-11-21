@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' show Offset, Rect, Size;
 import '../score.dart';
 import '../staff_math.dart';
@@ -113,6 +114,63 @@ class BarView {
     return place is Map && place['x'] is num ? (place['x'] as num).toDouble() : null;
   }
 
+  final _moved = <int, Map<int, double>>{};
+
+  /// x of event [e] of staff [s] as drawn: the recognized x, or an estimate
+  /// when the recognition put it out of order (see [_outOfOrder]).
+  double? xOf(int s, int e) => (_moved[s] ??= _outOfOrder(s))[e] ?? eventX(score.event(s, measure, e));
+
+  /// Events whose recognized x breaks the order of the beats: a head snapped
+  /// to its neighbour (two notes on one head) or to an earlier note. Older
+  /// recognitions (layout version < 4) have these. The longest run of
+  /// left-to-right positions is kept; the others are placed by their beat
+  /// between the kept neighbours. Returns event index -> estimated x.
+  Map<int, double> _outOfOrder(int s) {
+    final lines = staffOf(s).lines;
+    if (lines == null) return const {};
+    final events = score.events(s, measure);
+    // Onset -> leftmost recognized x of the events starting then (graces aside).
+    final byOnset = <double, double>{};
+    final members = <double, List<int>>{};
+    for (var e = 0; e < events.length; e++) {
+      final event = events[e] as Map;
+      final x = eventX(event);
+      if (x == null || event['grace'] == true) continue;
+      final onset = ScoreDocument.beat(event['onset']);
+      byOnset[onset] = math.min(byOnset[onset] ?? x, x);
+      (members[onset] ??= []).add(e);
+    }
+    final onsets = byOnset.keys.toList()..sort();
+    if (onsets.length < 2) return const {};
+    // Longest chain with x increasing by at least 4 px (1920-px page frame).
+    final n = onsets.length;
+    final best = List.filled(n, 1), back = List.filled(n, -1);
+    for (var i = 0; i < n; i++) {
+      for (var j = 0; j < i; j++) {
+        if (byOnset[onsets[i]]! - byOnset[onsets[j]]! >= 4 && best[j] + 1 > best[i]) { best[i] = best[j] + 1; back[i] = j; }
+      }
+    }
+    var end = 0;
+    for (var i = 1; i < n; i++) { if (best[i] > best[end]) end = i; }
+    if (best[end] == n) return const {};
+    final kept = <int>{};
+    for (var i = end; i >= 0; i = back[i]) { kept.add(i); }
+    final length = score.barLength(s, measure);
+    final barBeats = length.numerator / length.denominator;
+    final moved = <int, double>{};
+    for (var i = 0; i < n; i++) {
+      if (kept.contains(i)) continue;
+      // Kept neighbours, or the bar's ends.
+      var a = (0.0, lines.x0), b = (barBeats, lines.x1);
+      for (var j = i - 1; j >= 0; j--) { if (kept.contains(j)) { a = (onsets[j], byOnset[onsets[j]]!); break; } }
+      for (var j = i + 1; j < n; j++) { if (kept.contains(j)) { b = (onsets[j], byOnset[onsets[j]]!); break; } }
+      final t = b.$1 == a.$1 ? 0.5 : ((onsets[i] - a.$1) / (b.$1 - a.$1)).clamp(0.0, 1.0);
+      final x = a.$2 + (b.$2 - a.$2) * t;
+      for (final e in members[onsets[i]]!) { moved[e] = x; }
+    }
+    return moved;
+  }
+
   /// Heads of event [e] of staff [s] as drawn over the page.
   List<DrawnHead> heads(int s, int e) {
     final staff = staffOf(s);
@@ -121,7 +179,9 @@ class BarView {
     final event = score.event(s, measure, e);
     final pitches = event['pitches'] as List;
     if (pitches.isEmpty) return const [];
-    final recognized = ScoreDocument.headsInPitchOrder(event);
+    // Out of order (see _outOfOrder): every head moves with the event.
+    final movedX = (_moved[s] ??= _outOfOrder(s))[e];
+    final recognized = movedX == null ? ScoreDocument.headsInPitchOrder(event) : null;
     if (recognized != null) {
       return [for (var p = 0; p < recognized.length; p++) () {
         final h = recognized[p];
@@ -133,7 +193,7 @@ class BarView {
           suspect: h['snapped'] != true && h['manual'] != true && now == was, edited: h['manual'] == true || now != was);
       }()];
     }
-    final x = eventX(event);
+    final x = movedX ?? eventX(event);
     if (x == null) return const [];
     return [for (var p = 0; p < pitches.length; p++) () {
       final written = staff.written(pitches[p] as int);
@@ -250,7 +310,7 @@ Map<int, List<NoteMark>> noteMarks(ScoreDocument score, Map? layout) {
         final start = ScoreDocument.beat(event['onset']) / length;
         final end = event['grace'] == true ? start : start + ScoreDocument.beat(event['duration']) / length;
         if ((event['pitches'] as List).isEmpty) {
-          final x = BarView.eventX(event);
+          final x = view.xOf(st.staff, e);
           if (x != null && event['inferred_rest'] != true) {
             final half = lines.half(x);
             marks.add(NoteMark(Offset(x / w, lines.line(2, x) / h), Size(3.2 * half / w, 1.5 * half / h), const [], '',

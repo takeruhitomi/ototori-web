@@ -80,8 +80,40 @@ async function labelsOnly() {
   log(`labels finished: ${state.done} pages`);
 }
 
+/**
+ * ?relayout=<saved tag>: positions only (no model). Each page is rendered,
+ * its saved result read from out/<saved tag>/ and its layout and token places
+ * recomputed with the current omr-placement.js; saved under ?tag.
+ */
+async function relayout(from) {
+  state.status = 'running';
+  const out = new URL(`../../../../work/web-parity/out/${from}/`, location.href);
+  for (const song of songs) {
+    const bytes = new Uint8Array(await (await fetch(new URL(`${song}/${song}.pdf`, samples))).arrayBuffer());
+    const doc = await pdfjs.getDocument({ data: bytes, isEvalSupported: false }).promise;
+    for (let n = 1; n <= doc.numPages; n++) {
+      if (!wanted(n)) continue;
+      state.total++;
+      try {
+        const saved = await fetch(new URL(`${song}/page-${n}.json`, out));
+        if (!saved.ok) throw new Error(`no saved page (${saved.status})`);
+        const data = await saved.json();
+        const image = await renderPage(doc, n);
+        const fresh = engine.relayoutPageData({ rgba: image.data, srcWidth: image.width, srcHeight: image.height, data });
+        await save(`${tag}/${song}/page-${n}.json`, { ...data, ...fresh });
+      } catch (e) {
+        state.errors.push(`${song} p${n}: ${e.stack || e}`);
+      }
+      state.done++;
+    }
+  }
+  state.status = 'finished';
+  log(`relayout finished: ${state.done} pages, ${state.errors.length} errors`);
+}
+
 async function main() {
   if (params.has('labelsOnly')) return labelsOnly();
+  if (params.get('relayout')) return relayout(params.get('relayout'));
   log(`isolated=${self.crossOriginIsolated} threads=${threads}`);
   state.status = 'loading';
   const info = await engine.ensureLoaded({ threads, onProgress: (stage, done, total) => { state.load = { stage, done, total }; } });

@@ -75,7 +75,9 @@ class PdfOmrEngine(private val models: ModelStore, private val vocabulary: Symbo
         // 2: a straight choir bracket is no longer a brace; a brace broken at
         // its middle point is joined.
         // 3: token positions (snapped barlines/noteheads, staff lines per bar).
-        const val LAYOUT_VERSION = 3
+        // 4: a note head snaps to the found head nearest the decoder's x and
+        // right of the previous chord's head.
+        const val LAYOUT_VERSION = 4
 
         fun analyzeLayout(gray: ByteArray, width: Int, height: Int, staves: List<LayoutStaff>,
                           tokens: List<List<PlacedToken>>? = null): PageLayoutResult {

@@ -226,7 +226,7 @@ class _OriginalState extends State<_Original> {
     final head = heads.where((h) => h.pitch == sel.pitch).firstOrNull;
     if (head != null) return Offset(head.x, head.y);
     if ((event['pitches'] as List).isNotEmpty) return null;
-    final x = BarView.eventX(event);
+    final x = view.xOf(sel.staff, sel.event);
     return x == null ? null : Offset(x, lines.line(2, x));
   }
 
@@ -259,7 +259,7 @@ class _OriginalState extends State<_Original> {
           if (d < near) { near = d; event = e; pitch = h.pitch; }
         }
       } else {
-        final x = BarView.eventX(list[e] as Map);
+        final x = view.xOf(best.staff, e);
         if (x == null) continue;
         final d = (x - p.dx).abs() + 0.35 * (l.line(2, x) - p.dy).abs();
         if (d < near) { near = d; event = e; pitch = 0; }
@@ -377,7 +377,7 @@ class _OverlayPainter extends CustomPainter {
       for (var e = 0; e < list.length; e++) {
         final event = list[e] as Map;
         final isSelected = selected?.staff == st.staff && selected?.event == e;
-        final x = BarView.eventX(event);
+        final x = view.xOf(st.staff, e);
         final heads = view.heads(st.staff, e);
         final anchor = heads.isNotEmpty ? heads.first.x : x;
         if (anchor == null) continue;

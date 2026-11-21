@@ -73,10 +73,23 @@ object SymbolPlacement {
         var bottomLine = diatonic("E4")!!
         var startGiven = false
         // Token order says which bar a note is in: search between its barlines.
+        // It also says which chord comes first: a chord's heads lie right of
+        // the previous chord's, so the search starts after the leftmost head
+        // the previous chord snapped to (a repeated note cannot take its
+        // neighbour's head).
         val barX = bars.associateWith { out[it]!!.x }
+        var previous: Double? = null  // leftmost snapped head of the last chord in this bar
+        var chordMin: Double? = null  // the same for the chord being placed
         for ((i, t) in tokens.withIndex()) {
             val before = bars.lastOrNull { it < i }?.let { barX.getValue(it) } ?: left.toDouble()
             val after = bars.firstOrNull { it > i }?.let { barX.getValue(it) } ?: right.toDouble()
+            val timed = t.rhythm.startsWith("note_") || t.rhythm.startsWith("rest_")
+            if (t.rhythm in BARLINES) { previous = null; chordMin = null }
+            else if (timed && !(i > 0 && tokens[i - 1].rhythm == "chord")) {
+                // A new chord (its members follow a "chord" token).
+                if (chordMin != null) previous = chordMin
+                chordMin = null
+            }
             when {
                 t.rhythm.startsWith("clef_") -> {
                     clefBottom(t.rhythm)?.let { bottomLine = it }
@@ -85,8 +98,13 @@ object SymbolPlacement {
                 }
                 t.rhythm.startsWith("note_") && t.x != null -> {
                     val step = diatonic(t.pitch)?.let { it - bottomLine }
-                    out[i] = if (step == null) TokenPlace(t.x, null, 0.0, false)
-                        else snapNote(mask, width, height, model, t.x, step, hollow(t.rhythm), t.rhythm.contains('G'), before, after)
+                    // snapNote keeps 0.4 space from `before`: heads at least 0.6 space apart.
+                    val prev = previous
+                    val from = if (prev != null && prev > before) max(before, prev + 0.2 * model.sp) else before
+                    val placed = if (step == null) TokenPlace(t.x, null, 0.0, false)
+                        else snapNote(mask, width, height, model, t.x, step, hollow(t.rhythm), t.rhythm.contains('G'), from, after)
+                    out[i] = placed
+                    if (placed.snapped && (chordMin == null || placed.x < chordMin!!)) chordMin = placed.x
                 }
                 t.rhythm.startsWith("rest_") && t.x != null -> out[i] = TokenPlace(t.x, null, 0.0, false)
             }
@@ -221,21 +239,33 @@ object SymbolPlacement {
         from = max(0, from); to = min(width - 1, to)
         var bestX = x; var bestY = y; var peak = -1.0
         val profile = mutableListOf<Double>()
+        val ys = mutableListOf<Double>()
         for (cx in from..to) {
             var colBest = -1.0; var colY = y
             for (dy in listOf(0.0, -0.15 * sp, 0.15 * sp)) {
                 val s = headScore(mask, width, height, cx.toDouble(), y + dy, sp * scale, hollow)
                 if (s > colBest) { colBest = s; colY = y + dy }
             }
-            profile.add(colBest)
+            profile.add(colBest); ys.add(colY)
             if (colBest > peak) { peak = colBest; bestX = cx.toDouble(); bestY = colY }
         }
         if (peak < 0) return TokenPlace(x, y, 0.0, false)
         val (low, high) = if (hollow) 0.3 to 0.65 else 0.4 to 0.85
-        var conf = ((peak - low) / (high - low)).coerceIn(0.0, 1.0)
+        // Of the heads in reach that would count as found, the one nearest the
+        // decoder's x: with repeated notes the strongest is often the neighbour's.
+        val enough = low + 0.5 * (high - low)
+        var near = -1
+        for (k in profile.indices) {
+            val s = profile[k]
+            if (s < enough || (k > 0 && profile[k - 1] > s) || (k + 1 < profile.size && profile[k + 1] >= s)) continue
+            if (near < 0 || abs(from + k - x) < abs(from + near - x)) near = k
+        }
+        val chosen = if (near >= 0) profile[near] else peak
+        if (near >= 0) { bestX = (from + near).toDouble(); bestY = ys[near] }
+        var conf = ((chosen - low) / (high - low)).coerceIn(0.0, 1.0)
         // A beam or a long line at this height scores everywhere: not a head.
         val typical = profile.sorted()[profile.size / 2]
-        if (typical > 0.7 * peak) conf *= 0.5
+        if (typical > 0.7 * chosen) conf *= 0.5
         return if (conf >= 0.5) TokenPlace(bestX, bestY, conf, true) else TokenPlace(x, y, conf, false)
     }
 

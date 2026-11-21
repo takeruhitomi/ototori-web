@@ -29,8 +29,10 @@ const WINDOW = 320;
  * 2: a straight choir bracket is no longer a brace; a brace broken at its
  *    middle point is joined.
  * 3: token positions (snapped barlines/noteheads, staff lines per bar).
+ * 4: a note head snaps to the found head nearest the decoder's x and right
+ *    of the previous chord's head.
  */
-export const LAYOUT_VERSION = 3;
+export const LAYOUT_VERSION = 4;
 
 let sessions = null;     // {seg, enc, dec, info}
 let vocabulary = null;
