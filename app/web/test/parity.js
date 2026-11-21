@@ -6,6 +6,7 @@
  */
 import * as pdfjs from '../vendor/pdfjs/pdf.min.mjs';
 import * as engine from '../js/omr-engine.js';
+import { textLabels } from '../js/text-labels.js';
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL('../vendor/pdfjs/pdf.worker.min.mjs', import.meta.url).href;
 
@@ -61,7 +62,26 @@ async function save(path, value) {
   if (!response.ok) throw new Error(`save ${path}: ${response.status}`);
 }
 
+/** ?labelsOnly: re-save labels-N.json only (no recognition), e.g. after a text-labels.js change. */
+async function labelsOnly() {
+  state.status = 'running';
+  for (const song of songs) {
+    const bytes = new Uint8Array(await (await fetch(new URL(`${song}/${song}.pdf`, samples))).arrayBuffer());
+    const doc = await pdfjs.getDocument({ data: bytes, isEvalSupported: false }).promise;
+    for (let n = 1; n <= doc.numPages; n++) {
+      if (!wanted(n)) continue;
+      state.total++;
+      const page = await doc.getPage(n);
+      try { await save(`${tag}/${song}/labels-${n}.json`, await textLabels(page)); } finally { page.cleanup(); }
+      state.done++;
+    }
+  }
+  state.status = 'finished';
+  log(`labels finished: ${state.done} pages`);
+}
+
 async function main() {
+  if (params.has('labelsOnly')) return labelsOnly();
   log(`isolated=${self.crossOriginIsolated} threads=${threads}`);
   state.status = 'loading';
   const info = await engine.ensureLoaded({ threads, onProgress: (stage, done, total) => { state.load = { stage, done, total }; } });
@@ -100,6 +120,11 @@ async function main() {
           cancelled: () => false, onProgress: (stage, done, total) => { state.progress = { song, page: n, stage, done, total }; } });
         data.timing.render = renderMs;
         await save(`${tag}/${song}/page-${n}.json`, data);
+        // ?labels: also the PDF text layer as the web app reads it (part names, tempo).
+        if (params.has('labels')) {
+          const page = await doc.getPage(n);
+          try { await save(`${tag}/${song}/labels-${n}.json`, await textLabels(page)); } finally { page.cleanup(); }
+        }
         log(`${song} p${n}: ${image.width}x${image.height} staves=${data.staves.length} ${Math.round(performance.now() - t0)} ms`);
       } catch (e) {
         state.errors.push(`${song} p${n}: ${e.stack || e}`);

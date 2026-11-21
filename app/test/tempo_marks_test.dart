@@ -54,6 +54,24 @@ void main() {
     expect(tempoFromLabels([page([('J=176', 430)])], (6, 8))!.bpm, 88);
   });
 
+  test('reads "≒" and "≈" as "="', () {
+    // MuseScore export of うたをうたうのはわすれても: "♩ ≒ 96".
+    expect(parseTempoText('♩ ≒ 96'), (96, true, false));
+    expect(parseTempoText('♩≈72')?.$1, 72);
+  });
+
+  test('an eighth or half note glyph from the PDF text layer sets the unit', () {
+    // MuseScore exports of Tempestoso and たましいのスケジュール: "♪ = 88" is 44 quarters.
+    final eighth = tempoFromLabels([page([('♪ = 88', 430)])], (4, 4))!;
+    expect((eighth.unit, eighth.bpm, eighth.printed, eighth.assumedUnit), ('eighth', 44.0, 88, false));
+    expect(tempoFromLabels([page([('♪ = 106', 430)])], (6, 8))!.bpm, 53);
+    expect(tempoFromLabels([page([('♪. = 80', 430)])], (4, 4))!.bpm, 60);
+    final half = tempoFromLabels([page([('\u{1D15E} = 60', 430)])], (2, 2))!;
+    expect((half.unit, half.bpm), ('half', 120.0));
+    expect(tempoFromLabels([page([('\u{1D15E}. = 40', 430)])], (6, 4))!.bpm, 120);
+    expect(tempoUnitSymbol('eighth'), '♪');
+  });
+
   test('no mark gives null', () {
     expect(tempoFromLabels([page([('静謐に', 430)])], (4, 4)), isNull);
   });

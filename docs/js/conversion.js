@@ -12,6 +12,7 @@ import * as engine from './omr-engine.js';
 import * as pdfSource from './pdf-source.js';
 import * as pdfjs from '../vendor/pdfjs/pdf.min.mjs';
 import { showProgress, hideProgress } from './progress.js';
+import { textLabels } from './text-labels.js';
 
 let run = null;          // {id, cancelled, reason}: the job being recognised
 let single = false;      // a recognizePage call is running
@@ -159,39 +160,6 @@ export async function readPageLabels(index) {
   const doc = await pdfjs.getDocument({ data: bytes, isEvalSupported: false }).promise;
   try {
     if (!(index >= 0 && index < doc.numPages)) throw new Error('ページ番号が範囲外です。');
-    const page = await doc.getPage(index + 1);
-    const base = page.getViewport({ scale: 1 });
-    const viewport = page.getViewport({ scale: 1920 / base.width });
-    const content = await page.getTextContent();
-    const runs = [];
-    for (const item of content.items) {
-      const text = (item.str || '').trim();
-      if (!text) continue;
-      const [a, b, c, d, e, f] = pdfjs.Util.transform(viewport.transform, item.transform);
-      const height = Math.hypot(c, d);
-      const width = item.width * viewport.scale;
-      if (!(height > 0) || Math.abs(b) > Math.abs(a)) continue; // vertical text
-      runs.push({ text, left: e, right: e + Math.max(width, height * 0.5), top: f - height, bottom: f, height });
-    }
-    // Join runs on one baseline into lines, as OCR reports lines.
-    runs.sort((p, q) => p.bottom - q.bottom || p.left - q.left);
-    const lines = [];
-    for (const r of runs) {
-      const line = lines.find((l) => Math.abs(l.bottom - r.bottom) < 0.35 * r.height &&
-        r.left - l.right < 1.5 * r.height && l.left - r.right < 1.5 * r.height);
-      if (line) {
-        const before = r.left < line.left;
-        line.text = before ? `${r.text} ${line.text}` : `${line.text} ${r.text}`;
-        line.left = Math.min(line.left, r.left); line.right = Math.max(line.right, r.right);
-        line.top = Math.min(line.top, r.top); line.bottom = Math.max(line.bottom, r.bottom);
-      } else lines.push({ ...r });
-    }
-    const labels = lines.slice(0, 2000).map((l) => {
-      const box = [Math.floor(l.left), Math.floor(l.top), Math.ceil(l.right), Math.ceil(l.bottom)];
-      if (box[2] <= box[0]) box[2] = box[0] + 1;
-      if (box[3] <= box[1]) box[3] = box[1] + 1;
-      return { text: l.text.slice(0, 500), bounds: box };
-    });
-    return { labels, warnings: [] };
+    return await textLabels(await doc.getPage(index + 1));
   } finally { doc.destroy(); }
 }
